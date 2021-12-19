@@ -8,10 +8,72 @@
 
     <%= stylesheet_pack_tag 'application', media: 'all' %>
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js' %>
     <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
   </head>
 
   <body>
     <%= yield %>
   </body>
+
+  <script>
+    let scene, camera, renderer, starGeo, stars;
+
+    function init() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 1;
+      camera.rotation.x = Math.PI / 2;
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      starGeo = new THREE.Geometry();
+      for(let i = 0; i< 6000; i++) {
+        star = new THREE.Vector3(
+          Math.random() * 600 - 300,
+          Math.random() * 600 - 300,
+          Math.random() * 600 - 300,
+        );
+
+        star.velocity = 0;
+        star.acceleration = 0.02;
+
+        starGeo.vertices.push(star);
+      }
+
+
+      THREE.ImageUtils.crossOrigin = '';
+      var sprite = THREE.ImageUtils.loadTexture('data:image/png;base64,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')
+      let starMaterial = new THREE.PointsMaterial({
+        color: 0xaaaaaa,
+        size: 0.7,
+        map: sprite,
+      });
+
+      stars = new THREE.Points(starGeo, starMaterial);
+      scene.add(stars)
+
+      animate(); 
+    }
+
+    function animate() {
+      starGeo.vertices.forEach(p => {
+        p.velocity += p.acceleration;
+        p.y -= p.velocity;
+
+        if(p.y < -200) {
+          p.y = 200;
+          p.velocity = 0;
+        }
+      })
+      starGeo.verticesNeedUpdate = true
+      stars.rotation.y += 0.002;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    init();
+  </script>
 </html>
